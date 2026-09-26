@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กิจกรรม 4.1 - สังเกตปัญหาไฟกะพริบ</title>
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:#f4f7fb;margin:0;color:#1f2937}
+  .wrap{max-width:900px;margin:40px auto;padding:24px}
+  .card{background:#fff;border-radius:18px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,.08);margin-bottom:20px}
+  h1{margin-top:0;color:#0f4c81}
+  h2{color:#166534}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  label{font-weight:600;display:block;margin-bottom:8px}
+  input[type=number], textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:10px}
+  input[type=range]{width:100%}
+  .lamp{width:130px;height:130px;border-radius:50%;margin:20px auto;background:#6b7280;box-shadow:0 0 0 rgba(0,0,0,0);transition:.2s}
+  .lamp.on{background:#fde047;box-shadow:0 0 35px rgba(253,224,71,.85)}
+  .status{text-align:center;font-size:22px;font-weight:700}
+  .value{text-align:center;font-size:34px;font-weight:800;color:#0f4c81}
+  .count{font-size:38px;font-weight:800;text-align:center;color:#b91c1c}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  button{padding:10px 16px;border:0;border-radius:10px;background:#0f4c81;color:white;font-weight:700;cursor:pointer}
+  button.secondary{background:#64748b}
+  .note{background:#ecfeff;border-left:5px solid #0891b2;padding:14px;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>กิจกรรม 4.1 : สังเกตปัญหาไฟกะพริบ (Chattering)</h1>
+    <p>จำลองระบบเปิด–ปิดไฟด้วยค่าแสง โดยใช้ค่าเกณฑ์เดียวกัน เพื่อดูปัญหาเมื่อค่าความสว่างแกว่งรอบ Threshold</p>
+  </div>
+
+  <div class="card grid">
+    <div>
+      <label>ค่าเกณฑ์ Threshold (lux)</label>
+      <input id="th" type="number" value="40" min="0" max="100">
+
+      <label style="margin-top:18px">ค่าความสว่างปัจจุบัน</label>
+      <input id="lux" type="range" min="0" max="100" value="50">
+      <div class="value"><span id="luxVal">50</span> lux</div>
+
+      <div class="note">
+        กติกา: ต่ำกว่า Threshold → เปิดไฟ<br>
+        สูงกว่า Threshold → ปิดไฟ
+      </div>
+    </div>
+
+    <div>
+      <div id="lamp" class="lamp"></div>
+      <div id="status" class="status">ไฟดับ</div>
+      <p style="text-align:center">จำนวนครั้งที่สถานะเปลี่ยน</p>
+      <div id="count" class="count">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="btns">
+      <button onclick="randomFluctuation()">จำลองค่าแกว่งรอบ Threshold</button>
+      <button class="secondary" onclick="resetExp()">รีเซ็ต</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>บันทึกผลการทดลอง</h2>
+    <label>จำนวนครั้งที่ไฟเปลี่ยนสถานะใน 1 นาที</label>
+    <input id="resultCount" type="number" min="0">
+
+    <label style="margin-top:16px">สิ่งที่สังเกตเห็น</label>
+    <textarea rows="5" placeholder="เช่น ไฟเปิด-ปิดถี่เมื่อค่าแสงแกว่งใกล้ 40 lux"></textarea>
+  </div>
+</div>
+
+<script>
+let lastState = false;
+let changes = 0;
+
+const lux = document.getElementById('lux');
+const th = document.getElementById('th');
+const lamp = document.getElementById('lamp');
+const statusEl = document.getElementById('status');
+const luxVal = document.getElementById('luxVal');
+const countEl = document.getElementById('count');
+
+function update(){
+  const v = Number(lux.value);
+  const t = Number(th.value);
+  luxVal.textContent = v;
+
+  let newState = lastState;
+  if(v < t) newState = true;
+  if(v > t) newState = false;
+
+  if(newState !== lastState){
+    changes++;
+    lastState = newState;
+    countEl.textContent = changes;
+    document.getElementById('resultCount').value = changes;
+  }
+
+  lamp.classList.toggle('on', lastState);
+  statusEl.textContent = lastState ? 'ไฟติด' : 'ไฟดับ';
+}
+
+lux.addEventListener('input', update);
+th.addEventListener('input', update);
+
+function resetExp(){
+  changes = 0;
+  lastState = false;
+  lux.value = 50;
+  countEl.textContent = '0';
+  document.getElementById('resultCount').value = '';
+  update();
+}
+
+function randomFluctuation(){
+  let n = 0;
+  const t = Number(th.value);
+  const timer = setInterval(()=>{
+    const jitter = Math.floor(Math.random()*9)-4;
+    lux.value = Math.max(0, Math.min(100, t + jitter));
+    update();
+    n++;
+    if(n >= 30) clearInterval(timer);
+  }, 250);
+}
+
+update();
+</script>
+</body>
+</html>
